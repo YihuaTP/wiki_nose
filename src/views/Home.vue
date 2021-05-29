@@ -15,7 +15,7 @@
             </span>
           </template>
           <a-menu-item key="1">第一个</a-menu-item>
-          <a-menu-item key="2">option2</a-menu-item>
+          <a-menu-item key="2">第二个</a-menu-item>
           <a-menu-item key="3">option3</a-menu-item>
           <a-menu-item key="4">option4</a-menu-item>
         </a-sub-menu>
