@@ -4,20 +4,26 @@
     <WikiHeader></WikiHeader>
 
     <router-view />
-    <a-layout-footer style="text-align: center">
-      wiki开放知识库系统 ©2021 Created by love kong company
-    </a-layout-footer>
+
+    <Wiki-footer></Wiki-footer>
+    
   </a-layout>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import WikiHeader from "@/components/WikiHeader.vue"; // @ is an alias to /src
 
+// 导入组件，步骤一
+import WikiHeader from "@/components/WikiHeader.vue"; 
+import WikiFooter from "@/components/WikiFooter.vue"; 
+
+
+// 导入组件，步骤二
 export default defineComponent({
   name: "App",
   components: {
-    WikiHeader
+    WikiHeader,
+    WikiFooter
   },
 });
 </script>
