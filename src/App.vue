@@ -1,12 +1,10 @@
 <template>
   <a-layout>
-    
     <WikiHeader></WikiHeader>
 
     <router-view />
 
     <Wiki-footer></Wiki-footer>
-    
   </a-layout>
 </template>
 
@@ -14,16 +12,15 @@
 import { defineComponent } from "vue";
 
 // 导入组件，步骤一
-import WikiHeader from "@/components/WikiHeader.vue"; 
-import WikiFooter from "@/components/WikiFooter.vue"; 
-
+import WikiHeader from "@/components/WikiHeader.vue";
+import WikiFooter from "@/components/WikiFooter.vue";
 
 // 导入组件，步骤二
 export default defineComponent({
   name: "App",
   components: {
     WikiHeader,
-    WikiFooter
+    WikiFooter,
   },
 });
 </script>
