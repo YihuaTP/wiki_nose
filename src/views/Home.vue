@@ -37,34 +37,34 @@
         </a-sub-menu>
       </a-menu>
     </a-layout-sider>
-    <a-layout-content :style="{background: '#fff',padding: '24px',margin: 0,minHeight: '280px',}">
-      
-      <a-list item-layout="vertical" size="large" :pagination="pagination" :data-source="listData">
-        <template #footer>
-          <div><b>ant design vue</b>footer part</div>
-        </template>
+    <a-layout-content
+      :style="{
+        background: '#fff',
+        padding: '24px',
+        margin: 0,
+        minHeight: '280px',
+      }"
+    >
+      <a-list
+        item-layout="vertical"
+        size="large"
+        :data-source="books"
+        :grid="{ gutter: 16, column: 3}"
+      >
         <template #renderItem="{ item }">
-          <a-list-item key="item.title">
+          <a-list-item key="item.name">
             <template #actions>
               <span v-for="{ type, text } in actions" :key="type">
                 <component v-bind:is="type" style="margin-right: 8px" />
                 {{ text }}
               </span>
             </template>
-            <template #extra>
-              <img
-                width="272"
-                alt="logo"
-                src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
-              />
-            </template>
             <a-list-item-meta :description="item.description">
               <template #title>
-                <a :href="item.href">{{ item.title }}</a>
+                <a :href="item.href">{{ item.name }}</a>
               </template>
-              <template #avatar><a-avatar :src="item.avatar" /></template>
+              <template #avatar><a-avatar :src="item.cover" /></template>
             </a-list-item-meta>
-            {{ item.content }}
           </a-list-item>
         </template>
       </a-list>
@@ -73,60 +73,49 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, toRef } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
 import axios from "axios";
-//import { StarOutlined, LikeOutlined, MessageOutlined } from '@ant-design/icons-vue';
-
-const listData: Record<string, string>[] = [];
-
-for (let i = 0; i < 23; i++) {
-  listData.push({
-    href: 'https://www.antdv.com/',
-    title: `ant design vue part ${i}`,
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-    description:
-      'Ant Design, a design language for background applications, is refined by Ant UED Team.',
-    content:
-      'We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully and efficiently.',
-  });
-}
 
 export default defineComponent({
   name: "Home",
+
   setup() {
-    const bookList = reactive({
-      books: [],
-    });
+    const books = ref();
+
     onMounted(() => {
       axios
-        .get("http://localhost:8080/wiki/book/教程")
+        .get("http://localhost:8080/wiki/book/list")
         .then((res) => {
-          const data = res.data;
-          bookList.books = data;
+          console.log(res);
+          books.value = res.data.content;
         })
         .catch((err) => {
           console.error(err);
         });
     });
 
-    const pagination = {
-      onChange: (page: number) => {
-        console.log(page);
-      },
-      pageSize: 3,
-    };
-    const actions: Record<string, string>[] = [
-      { type: 'StarOutlined', text: '156' },
-      { type: 'LikeOutlined', text: '156' },
-      { type: 'MessageOutlined', text: '2' },
+
+    const actions: any = [
+      { type: "StarOutlined", text: "156" },
+      { type: "LikeOutlined", text: "156" },
+      { type: "MessageOutlined", text: "2" },
     ];
 
     return {
-      bookList: toRef(bookList, "books"),
-      listData,
-      pagination,
+      books,
       actions,
     };
   },
 });
 </script>
+
+// 设置文档图标样式，scoped：表示只是在当前页面有效果
+<style scoped>   
+  .ant-avatar {
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 8%;
+    margin: 5px 0;
+  }
+</style>
