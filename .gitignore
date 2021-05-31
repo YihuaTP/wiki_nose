@@ -2,6 +2,10 @@
 node_modules
 /dist
 
+# 生产环境和测试环境配置
+.env.dev
+.env.prod
+
 
 # local env files
 .env.local
