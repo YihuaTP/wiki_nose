@@ -49,7 +49,7 @@
         item-layout="vertical"
         size="large"
         :data-source="books"
-        :grid="{ gutter: 16, column: 3}"
+        :grid="{ gutter: 16, column: 3 }"
       >
         <template #renderItem="{ item }">
           <a-list-item key="item.name">
@@ -78,22 +78,23 @@ import axios from "axios";
 
 export default defineComponent({
   name: "Home",
-
   setup() {
     const books = ref();
 
     onMounted(() => {
       axios
-        .get("http://localhost:8080/wiki/book/list")
+        .get("/wiki/book/info",{
+            params:{
+
+            }
+        })
         .then((res) => {
-          console.log(res);
-          books.value = res.data.content;
+          books.value = res.data.content.content;
         })
         .catch((err) => {
           console.error(err);
         });
     });
-
 
     const actions: any = [
       { type: "StarOutlined", text: "156" },
@@ -103,19 +104,19 @@ export default defineComponent({
 
     return {
       books,
-      actions,
+      actions
     };
   },
 });
 </script>
 
 // 设置文档图标样式，scoped：表示只是在当前页面有效果
-<style scoped>   
-  .ant-avatar {
-    width: 50px;
-    height: 50px;
-    line-height: 50px;
-    border-radius: 8%;
-    margin: 5px 0;
-  }
+<style scoped>
+.ant-avatar {
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  border-radius: 8%;
+  margin: 5px 0;
+}
 </style>
