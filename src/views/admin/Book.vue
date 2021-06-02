@@ -11,7 +11,7 @@
       <a-table
         :columns="columns"
         :data-source="books"
-        :row-key="record => record.id"
+        :row-key="(record) => record.id"
         :pagination="pagination"
         :loading="loading"
         @change="handleTableChange"
@@ -22,13 +22,25 @@
 
         <template v-slot:action="{ text, record }">
           <a-space size="small">
-            <a-button type="primary"> 编辑 </a-button>
+            <a-button type="primary" @click="edit"> 编辑 </a-button>
             <a-button type="danger"> 删除 </a-button>
           </a-space>
         </template>
       </a-table>
     </a-layout-content>
   </a-layout>
+
+  <!-- 拟态对话框 -->
+  <a-modal
+    title="电子书列表"
+    v-model:visible="modelVisible"
+    :confirm-loading="modelLoading"
+    @ok="handleModelOk"
+    cancelText="取消"
+    okText="确认"
+  >
+    <p>{{ modalText }}</p>
+  </a-modal>
 </template>
 
 <script lang="ts">
@@ -84,14 +96,6 @@ export default defineComponent({
       },
     ];
 
-    // 初始化页面数据
-    onMounted(() => {
-      handleQuery({
-        page: pagination.value.current,
-        size: pagination.value.pageSize,
-      });
-    });
-
     // 向后端发起请求
     const handleQuery = (params: any) => {
       loading.value = true;
@@ -123,12 +127,45 @@ export default defineComponent({
       });
     };
 
+    // ref后面定义的是这个响应式类型的数据值，在后面是默认值
+    const modalText = ref<string>('确认删除该数据吗？');
+    const modelVisible = ref<boolean>(false);
+    const modelLoading = ref<boolean>(false);
+
+    const edit = () => {
+      modelVisible.value = true;
+
+    };
+
+    const handleModelOk = () => {
+      modalText.value = '正在删除中';
+      modelLoading.value = true;
+      setTimeout(() => {
+        modelVisible.value = false;
+        modelLoading.value = false;
+      }, 2000);
+    };
+
+    // 初始化页面数据
+    onMounted(() => {
+      handleQuery({
+        page: pagination.value.current,
+        size: pagination.value.pageSize,
+      });
+    });
+
     return {
       books,
       pagination,
       columns,
       loading,
       handleTableChange,
+
+      modalText,
+      modelVisible,
+      modelLoading,
+      edit,
+      handleModelOk,
     };
   },
 });
