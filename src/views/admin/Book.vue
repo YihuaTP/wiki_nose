@@ -11,7 +11,7 @@
       <a-table
         :columns="columns"
         :data-source="books"
-        :row-key="(record) => record.id"
+        :row-key="record => record.id"
         :pagination="pagination"
         :loading="loading"
         @change="handleTableChange"
