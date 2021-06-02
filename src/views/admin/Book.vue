@@ -22,17 +22,51 @@
 
         <template v-slot:action="{ text, record }">
           <a-space size="small">
-            <a-button type="primary" @click="edit"> 编辑 </a-button>
-            <a-button type="danger"> 删除 </a-button>
+            <a-button type="primary" @click="editBook(record)"> 编辑 </a-button>
+            <a-button type="danger" @click="deleteBook(text)"> 删除 </a-button>
           </a-space>
         </template>
       </a-table>
     </a-layout-content>
   </a-layout>
 
-  <!-- 拟态对话框 -->
+  <!-- 修改电子书数据模态框 -->
   <a-modal
-    title="电子书列表"
+    title="编辑电子书"
+    v-model:visible="editModelVisible"
+    :confirm-loading="editModelLoading"
+    @ok="editHandleModelOk"
+    cancelText="取消"
+    okText="确认"
+  >
+    <p>
+      <a-form :model="bookInfo" :label-col="{ span: 3, offset: 2 }">
+        <a-form-item label="封面">
+          <a-input v-model:value="book.cover" class="len" />
+        </a-form-item>
+        <a-form-item label="名称">
+          <a-input v-model:value="book.name" class="len" />
+        </a-form-item>
+        <a-form-item label="分类一">
+          <a-input v-model:value="book.category1Id" class="len" />
+        </a-form-item>
+        <a-form-item label="分类二">
+          <a-input v-model:value="book.category2Id" class="len" />
+        </a-form-item>
+        <a-form-item label="描述">
+          <a-textarea
+            v-model:value="book.description"
+            type="textArea"
+            class="len"
+          />
+        </a-form-item>
+      </a-form>
+    </p>
+  </a-modal>
+
+  <!-- 删除电子书拟态对话框 -->
+  <a-modal
+    title="删除电子书"
     v-model:visible="modelVisible"
     :confirm-loading="modelLoading"
     @ok="handleModelOk"
@@ -127,18 +161,49 @@ export default defineComponent({
       });
     };
 
-    // ref后面定义的是这个响应式类型的数据值，在后面是默认值
-    const modalText = ref<string>('确认删除该数据吗？');
-    const modelVisible = ref<boolean>(false);
-    const modelLoading = ref<boolean>(false);
+    // 编辑数据使用，直接使用将record当做参数传递到函数内部
+    const book = ref({});
+    const editModelVisible = ref<boolean>(false);
+    const editModelLoading = ref<boolean>(false);
+    const editBook = (record: any) => {
+      editModelVisible.value = true;
+      book.value = record;
+    };
+    const editHandleModelOk = () => {
+      editModelLoading.value = true;
+      axios
+        .post("/wiki/book/edit", book.value)
+        .then((res) => {
+          const data = res.data;
+          if (data.success) {
+            editModelVisible.value = false;
+            editModelLoading.value = false;
+          } else {
+            editModelVisible.value = false;
+            editModelLoading.value = false;
+            alert("数据修改失败");
+          }
 
-    const edit = () => {
-      modelVisible.value = true;
-
+          // 重新刷新页面，并且还是本页
+          handleQuery({
+            page: pagination.value.current,
+            size: pagination.value.pageSize,
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     };
 
+    // 删除电子书逻辑
+    const modalText = ref<string>("Content of the modal");
+    const modelVisible = ref<boolean>(false);
+    const modelLoading = ref<boolean>(false);
+    const deleteBook = () => {
+      modelVisible.value = true;
+    };
     const handleModelOk = () => {
-      modalText.value = '正在删除中';
+      modalText.value = "正在删除ing";
       modelLoading.value = true;
       setTimeout(() => {
         modelVisible.value = false;
@@ -161,10 +226,16 @@ export default defineComponent({
       loading,
       handleTableChange,
 
+      editBook,
+      editModelVisible,
+      editModelLoading,
+      editHandleModelOk,
+      book,
+
+      deleteBook,
       modalText,
       modelVisible,
       modelLoading,
-      edit,
       handleModelOk,
     };
   },
@@ -176,6 +247,10 @@ export default defineComponent({
 img {
   width: 50px;
   height: 50px;
+}
+
+.len {
+  width: 300px;
 }
 </style>
 
