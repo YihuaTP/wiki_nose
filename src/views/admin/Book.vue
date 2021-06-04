@@ -8,6 +8,40 @@
         minHeight: '280px',
       }"
     >
+      <a-button type="primary" @click="add" size="large"> 新增 </a-button>
+
+      <a-modal
+        title="新增电子书"
+        v-model:visible="addModelVisible"
+        :confirm-loading="addModelLoading"
+        @ok="addHandleModelOk"
+        cancelText="取消"
+        okText="确认"
+      >
+        <p>
+          <a-form :model="bookInfo" :label-col="{ span: 3, offset: 2 }">
+            <a-form-item label="封面">
+              <a-input v-model:value="book.cover" class="len" />
+            </a-form-item>
+            <a-form-item label="名称">
+              <a-input v-model:value="book.name" class="len" />
+            </a-form-item>
+            <a-form-item label="分类一">
+              <a-input v-model:value="book.category1Id" class="len" />
+            </a-form-item>
+            <a-form-item label="分类二">
+              <a-input v-model:value="book.category2Id" class="len" />
+            </a-form-item>
+            <a-form-item label="描述">
+              <a-textarea
+                v-model:value="book.description"
+                type="textArea"
+                class="len"
+              />
+            </a-form-item>
+          </a-form>
+        </p>
+      </a-modal>
       <a-table
         :columns="columns"
         :data-source="books"
@@ -22,8 +56,16 @@
 
         <template v-slot:action="{ text, record }">
           <a-space size="small">
-            <a-button type="primary" @click="editBook(record)"> 编辑 </a-button>
-            <a-button type="danger" @click="deleteBook(text)"> 删除 </a-button>
+            <a-button type="primary" @click="editBook(record,text)"> 编辑 </a-button>
+
+            <a-popconfirm
+              title="删除之后不可回复，请确认删除?"
+              ok-text="删除"
+              cancel-text="取消"
+              @confirm="deleteBook(record.id)"
+            >
+              <a href="#"><a-button type="danger"> 删除 </a-button></a>
+            </a-popconfirm>
           </a-space>
         </template>
       </a-table>
@@ -63,18 +105,6 @@
       </a-form>
     </p>
   </a-modal>
-
-  <!-- 删除电子书拟态对话框 -->
-  <a-modal
-    title="删除电子书"
-    v-model:visible="modelVisible"
-    :confirm-loading="modelLoading"
-    @ok="handleModelOk"
-    cancelText="取消"
-    okText="确认"
-  >
-    <p>{{ modalText }}</p>
-  </a-modal>
 </template>
 
 <script lang="ts">
@@ -109,7 +139,8 @@ export default defineComponent({
       },
       {
         title: "分类",
-        slots: { customRender: "category" },
+        dataIndex: "category1Id",
+        slots: { customRender: "category1Id" },
       },
       {
         title: "文档数",
@@ -171,44 +202,59 @@ export default defineComponent({
     };
     const editHandleModelOk = () => {
       editModelLoading.value = true;
-      axios
-        .post("/wiki/book/edit", book.value)
-        .then((res) => {
-          const data = res.data;
-          if (data.success) {
+      axios.put("/wiki/book/edit", book.value).then((res) => {
+        const data = res.data;
+        if (data.success) {
+          setTimeout(() => {
             editModelVisible.value = false;
             editModelLoading.value = false;
-          } else {
-            editModelVisible.value = false;
-            editModelLoading.value = false;
-            alert("数据修改失败");
-          }
-
-          // 重新刷新页面，并且还是本页
-          handleQuery({
-            page: pagination.value.current,
-            size: pagination.value.pageSize,
-          });
-        })
-        .catch((err) => {
-          console.error(err);
+          }, 1000);
+        }
+        // 重新刷新页面，并且还是本页
+        handleQuery({
+          page: pagination.value.current,
+          size: pagination.value.pageSize,
         });
+      });
     };
 
     // 删除电子书逻辑
-    const modalText = ref<string>("Content of the modal");
-    const modelVisible = ref<boolean>(false);
-    const modelLoading = ref<boolean>(false);
-    const deleteBook = () => {
-      modelVisible.value = true;
+    const deleteBook = (id: number) => {
+      axios.delete("/wiki/book/remove/" + id).then((res) => {
+        if (res.data.success) {
+          // 重新刷新页面，并且还是本页
+          handleQuery({
+            page: 1,
+            size: pagination.value.pageSize,
+          });
+        }
+      });
     };
-    const handleModelOk = () => {
-      modalText.value = "正在删除ing";
-      modelLoading.value = true;
-      setTimeout(() => {
-        modelVisible.value = false;
-        modelLoading.value = false;
-      }, 2000);
+
+    // 新增电子书信息
+    const addModelVisible = ref<boolean>(false);
+    const addModelLoading = ref<boolean>(false);
+    const add = () => {
+      addModelVisible.value = true;
+      book.value = {};
+    };
+
+    const addHandleModelOk = () => {
+      addModelLoading.value = true;
+      axios.post("/wiki/book/add", book.value).then((res) => {
+        const data = res.data;
+        if (data.success) {
+          setTimeout(() => {
+            addModelVisible.value = false;
+            addModelLoading.value = false;
+          }, 1000);
+        }
+        // 重新刷新页面，并且还是本页
+        handleQuery({
+          page: pagination.value.current,
+          size: pagination.value.pageSize,
+        });
+      });
     };
 
     // 初始化页面数据
@@ -233,10 +279,11 @@ export default defineComponent({
       book,
 
       deleteBook,
-      modalText,
-      modelVisible,
-      modelLoading,
-      handleModelOk,
+
+      add,
+      addModelVisible,
+      addHandleModelOk,
+      addModelLoading,
     };
   },
 });
