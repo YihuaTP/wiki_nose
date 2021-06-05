@@ -80,19 +80,16 @@ export default defineComponent({
   name: "Home",
   setup() {
     const books = ref();
-
     onMounted(() => {
       axios
-        .get("/wiki/book/info",{
-            params:{
-
-            }
+        .get("/wiki/book/list", {
+          params: {
+            page: 1,
+            size: 100,
+          },
         })
         .then((res) => {
           books.value = res.data.content.content;
-        })
-        .catch((err) => {
-          console.error(err);
         });
     });
 
@@ -104,7 +101,7 @@ export default defineComponent({
 
     return {
       books,
-      actions
+      actions,
     };
   },
 });

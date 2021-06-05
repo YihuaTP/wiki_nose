@@ -8,7 +8,34 @@
         minHeight: '280px',
       }"
     >
-      <a-button type="primary" @click="add" size="large"> 新增 </a-button>
+      <p>
+        <a-form layout="inline" :model="formData">
+          <a-form-item>
+            <a-input
+              v-model:value="formData.name"
+              placeholder="请输入名称"
+            ></a-input>
+          </a-form-item>
+
+          <a-form-item>
+            <a-button
+              type="primary"
+              @click="
+                handleQuery({
+                  page: 1,
+                  size: pagination.pageSize,
+                })
+              "
+            >
+              查询
+            </a-button>
+          </a-form-item>
+
+          <a-form-item>
+            <a-button type="primary" @click="add()"> 新增 </a-button>
+          </a-form-item>
+        </a-form>
+      </p>
 
       <a-modal
         title="新增电子书"
@@ -42,6 +69,7 @@
           </a-form>
         </p>
       </a-modal>
+
       <a-table
         :columns="columns"
         :data-source="books"
@@ -56,7 +84,9 @@
 
         <template v-slot:action="{ text, record }">
           <a-space size="small">
-            <a-button type="primary" @click="editBook(record,text)"> 编辑 </a-button>
+            <a-button type="primary" @click="editBook(record, text)">
+              编辑
+            </a-button>
 
             <a-popconfirm
               title="删除之后不可回复，请确认删除?"
@@ -82,7 +112,7 @@
     okText="确认"
   >
     <p>
-      <a-form :model="bookInfo" :label-col="{ span: 3, offset: 2 }">
+      <a-form :label-col="{ span: 3, offset: 2 }">
         <a-form-item label="封面">
           <a-input v-model:value="book.cover" class="len" />
         </a-form-item>
@@ -110,6 +140,8 @@
 <script lang="ts">
 import axios from "axios";
 import { defineComponent, onMounted, ref } from "vue";
+import { message } from "ant-design-vue";
+import {Tool} from "@/util/tool";
 
 export default defineComponent({
   name: "Book",
@@ -119,12 +151,20 @@ export default defineComponent({
     // 定义加载的缓存图标，默认false
     const loading = ref(false);
 
-    // ant design 提供的分页最贱
+    // ant design 提供的分页组件
     const pagination = ref({
       total: 0,
       current: 1,
-      pageSize: 3,
+      pageSize: 4,
     });
+
+    // const formData = ref({
+    //   name: "",
+    // });
+
+    const formData = ref();
+
+    formData.value = {};
 
     // 定义渲染每一列
     const columns = [
@@ -165,22 +205,23 @@ export default defineComponent({
     const handleQuery = (params: any) => {
       loading.value = true;
       axios
-        .get("/wiki/book/info", {
+        .get("/wiki/book/list", {
           params: {
             page: params.page,
             size: params.size,
+            name: formData.value.name
           },
         })
         .then((res) => {
           loading.value = false;
-          const data = res.data.content;
-          books.value = data.content;
-          // 重置分页按钮
-          pagination.value.current = params.page;
-          pagination.value.total = data.total;
-        })
-        .catch((err) => {
-          console.error(err);
+          const data = res.data;
+          if (data.success) {
+            books.value = data.content.content;
+            pagination.value.current = params.page;
+            pagination.value.total = data.content.total;
+          } else {
+            message.error(data.message);
+          }
         });
     };
 
@@ -198,7 +239,7 @@ export default defineComponent({
     const editModelLoading = ref<boolean>(false);
     const editBook = (record: any) => {
       editModelVisible.value = true;
-      book.value = record;
+      book.value = Tool.copy(record);
     };
     const editHandleModelOk = () => {
       editModelLoading.value = true;
@@ -208,7 +249,7 @@ export default defineComponent({
           setTimeout(() => {
             editModelVisible.value = false;
             editModelLoading.value = false;
-          }, 1000);
+          }, 50);
         }
         // 重新刷新页面，并且还是本页
         handleQuery({
@@ -247,13 +288,16 @@ export default defineComponent({
           setTimeout(() => {
             addModelVisible.value = false;
             addModelLoading.value = false;
-          }, 1000);
+          }, 50);
+          // 重新刷新页面，并且还是本页
+          handleQuery({
+            page: pagination.value.current,
+            size: pagination.value.pageSize,
+          });
+        } else {
+          addModelLoading.value = false;
+          message.error(data.message);
         }
-        // 重新刷新页面，并且还是本页
-        handleQuery({
-          page: pagination.value.current,
-          size: pagination.value.pageSize,
-        });
       });
     };
 
@@ -284,6 +328,9 @@ export default defineComponent({
       addModelVisible,
       addHandleModelOk,
       addModelLoading,
+
+      formData,
+      handleQuery,
     };
   },
 });

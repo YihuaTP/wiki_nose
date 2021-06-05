@@ -8,6 +8,9 @@
       <a-menu-item key="book-manager">
         <router-link to="/admin/book">电子书管理</router-link>
       </a-menu-item>
+      <a-menu-item key="category-manager">
+        <router-link to="/admin/category">分类管理</router-link>
+      </a-menu-item>
       <a-menu-item key="about-we">
         <router-link to="/about">关于我们</router-link>
       </a-menu-item>
