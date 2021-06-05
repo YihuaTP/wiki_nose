@@ -82,6 +82,13 @@
           <img v-if="cover" :src="cover" alt="avatar" />
         </template>
 
+        <template v-slot:category="{ text: record }">
+          <span>
+            {{ getCategoryName(record.category1Id) }} /
+            {{ getCategoryName(record.category2Id) }}
+          </span>
+        </template>
+
         <template v-slot:action="{ text, record }">
           <a-space size="small">
             <a-button type="primary" @click="editBook(record, text)">
@@ -119,11 +126,13 @@
         <a-form-item label="名称">
           <a-input v-model:value="book.name" class="len" />
         </a-form-item>
-        <a-form-item label="分类一">
-          <a-input v-model:value="book.category1Id" class="len" />
-        </a-form-item>
-        <a-form-item label="分类二">
-          <a-input v-model:value="book.category2Id" class="len" />
+        <a-form-item label="分类">
+          <a-cascader
+            v-model:value="categoryIds"
+            :field-names="{ label: 'name', value: 'id', children: 'children' }"
+            :options="level1"
+            class="let"
+          />
         </a-form-item>
         <a-form-item label="描述">
           <a-textarea
@@ -141,16 +150,11 @@
 import axios from "axios";
 import { defineComponent, onMounted, ref } from "vue";
 import { message } from "ant-design-vue";
-import {Tool} from "@/util/tool";
+import { Tool } from "@/util/tool";
 
 export default defineComponent({
   name: "Book",
   setup() {
-    const books = ref();
-
-    // 定义加载的缓存图标，默认false
-    const loading = ref(false);
-
     // ant design 提供的分页组件
     const pagination = ref({
       total: 0,
@@ -158,12 +162,7 @@ export default defineComponent({
       pageSize: 4,
     });
 
-    // const formData = ref({
-    //   name: "",
-    // });
-
     const formData = ref();
-
     formData.value = {};
 
     // 定义渲染每一列
@@ -179,8 +178,7 @@ export default defineComponent({
       },
       {
         title: "分类",
-        dataIndex: "category1Id",
-        slots: { customRender: "category1Id" },
+        slots: { customRender: "category" },
       },
       {
         title: "文档数",
@@ -201,15 +199,19 @@ export default defineComponent({
       },
     ];
 
-    // 向后端发起请求
+    // 向后端发起请求，定义加载的缓存图标，默认false
+    const books = ref();
+    const loading = ref(false);
     const handleQuery = (params: any) => {
       loading.value = true;
+      // 如果不清空现有数据，则编辑保存重新加载数据后，再点编辑，则列表显示的还是编辑前的数据
+        books.value = [];
       axios
         .get("/wiki/book/list", {
           params: {
             page: params.page,
             size: params.size,
-            name: formData.value.name
+            name: formData.value.name,
           },
         })
         .then((res) => {
@@ -234,15 +236,19 @@ export default defineComponent({
     };
 
     // 编辑数据使用，直接使用将record当做参数传递到函数内部
-    const book = ref({});
+    const book = ref();
+    const categoryIds = ref();
     const editModelVisible = ref<boolean>(false);
     const editModelLoading = ref<boolean>(false);
     const editBook = (record: any) => {
       editModelVisible.value = true;
       book.value = Tool.copy(record);
+      categoryIds.value = [book.value.category1Id, book.value.category2Id];
     };
     const editHandleModelOk = () => {
       editModelLoading.value = true;
+      (book.value.category1Id = categoryIds.value[0]),
+        (book.value.category2Id = categoryIds.value[1]);
       axios.put("/wiki/book/edit", book.value).then((res) => {
         const data = res.data;
         if (data.success) {
@@ -301,8 +307,41 @@ export default defineComponent({
       });
     };
 
+    const level1 = ref();
+    let categorys: any;
+    const handleQueryCategory = () => {
+      loading.value = true;
+      axios.get("/wiki/category/list").then((response) => {
+        loading.value = false;
+        const data = response.data;
+        if (data.success) {
+          categorys = data.content;
+          level1.value = [];
+          level1.value = Tool.array2Tree(categorys, 0);
+          handleQuery({
+            page: 1,
+            size: pagination.value.pageSize,
+          });
+        } else {
+          message.error(data.message);
+        }
+      });
+    };
+
+    const getCategoryName = (cid: number) => {
+        let result = "";
+        categorys.forEach((item: any) => {
+          if (item.id === cid) {
+            result = item.name;
+          }
+        });
+        return result;
+      };
+
+
     // 初始化页面数据
     onMounted(() => {
+      handleQueryCategory();
       handleQuery({
         page: pagination.value.current,
         size: pagination.value.pageSize,
@@ -331,6 +370,10 @@ export default defineComponent({
 
       formData,
       handleQuery,
+
+      level1,
+      categoryIds,
+      getCategoryName
     };
   },
 });

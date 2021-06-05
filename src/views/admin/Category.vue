@@ -76,13 +76,23 @@
     <p>
       <a-form :label-col="{ span: 3, offset: 2 }">
         <a-form-item label="名称">
-          <a-input v-model:value="category.name" />
+          <a-input v-model:value="category.name" class="len" />
         </a-form-item>
         <a-form-item label="父类目">
-          <a-input v-model:value="category.parent" />
+          <a-select v-model:value="category.parent" ref="select" class="len">
+            <a-select-option :value="0"> 无 </a-select-option>
+            <a-select-option
+              v-for="c in leave1"
+              :key="c.id"
+              :value="c.id"
+              :disabled="category.id === c.id"
+            >
+              {{ c.name }}
+            </a-select-option>
+          </a-select>
         </a-form-item>
         <a-form-item label="顺序">
-          <a-input v-model:value="category.sort" />
+          <a-input v-model:value="category.sort" class="len" />
         </a-form-item>
       </a-form>
     </p>
@@ -101,7 +111,7 @@ export default defineComponent({
     // 定义加载的缓存图标，默认false
     const loading = ref(false);
     const leave1 = ref();
-  
+
     // 定义渲染每一列
     const columns = [
       {
@@ -126,7 +136,7 @@ export default defineComponent({
         loading.value = false;
         categorys.value = res.data.content;
         leave1.value = [];
-        leave1.value = Tool.array2Tree(categorys.value,0);
+        leave1.value = Tool.array2Tree(categorys.value, 0);
       });
     };
 
@@ -207,8 +217,7 @@ export default defineComponent({
       addHandleModelOk,
       addModelLoading,
 
-      deleteCategory
-
+      deleteCategory,
     };
   },
 });
