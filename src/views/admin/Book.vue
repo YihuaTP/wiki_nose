@@ -205,7 +205,7 @@ export default defineComponent({
     const handleQuery = (params: any) => {
       loading.value = true;
       // 如果不清空现有数据，则编辑保存重新加载数据后，再点编辑，则列表显示的还是编辑前的数据
-        books.value = [];
+      books.value = [];
       axios
         .get("/wiki/book/list", {
           params: {
@@ -329,23 +329,18 @@ export default defineComponent({
     };
 
     const getCategoryName = (cid: number) => {
-        let result = "";
-        categorys.forEach((item: any) => {
-          if (item.id === cid) {
-            result = item.name;
-          }
-        });
-        return result;
-      };
-
+      let result = "";
+      categorys.forEach((item: any) => {
+        if (item.id === cid) {
+          result = item.name;
+        }
+      });
+      return result;
+    };
 
     // 初始化页面数据
     onMounted(() => {
       handleQueryCategory();
-      handleQuery({
-        page: pagination.value.current,
-        size: pagination.value.pageSize,
-      });
     });
 
     return {
@@ -373,7 +368,7 @@ export default defineComponent({
 
       level1,
       categoryIds,
-      getCategoryName
+      getCategoryName,
     };
   },
 });

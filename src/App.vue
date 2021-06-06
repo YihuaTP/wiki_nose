@@ -1,10 +1,10 @@
 <template>
   <a-layout>
-    <WikiHeader></WikiHeader>
+    <wiki-header></wiki-header>
 
     <router-view />
 
-    <Wiki-footer></Wiki-footer>
+    <wiki-footer></wiki-footer>
   </a-layout>
 </template>
 
